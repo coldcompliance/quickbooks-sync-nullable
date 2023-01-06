@@ -18,8 +18,12 @@ namespace WebApplication.Sample.Extensions
         public static DateTimeOffset GetCorrectedDate(this DATETIMETYPE date, TimeZoneInfo quickBooksTimeZone)
         {
             var dateTime = date.ToDateTime();
-            var correctedOffset = quickBooksTimeZone.GetUtcOffset(dateTime);
-            return new DateTimeOffset(dateTime, correctedOffset);
+
+            if (dateTime == null) {
+                throw new ArgumentNullException();
+            }
+            var correctedOffset = quickBooksTimeZone.GetUtcOffset(dateTime.Value);
+            return new DateTimeOffset(dateTime.Value, correctedOffset);
         }
     }
 }
