@@ -4,6 +4,9 @@ QuickBooks Sync regroups multiple NuGet packages to sync data from QuickBooks De
 
 **This project is actively maintained and is in its early alpha stage. Many breaks will be introduced until stability is reached.**
 
+## Updated from the `quickbooks-sync-nullable` fork.
+- Added nullable to the base types.
+
 ## QbXml ##
 
 ### Installation ###
