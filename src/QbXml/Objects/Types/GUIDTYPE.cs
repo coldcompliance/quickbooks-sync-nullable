@@ -9,7 +9,7 @@ namespace QbSync.QbXml.Objects
     /// </summary>
     public partial class GUIDTYPE : ITypeWrapper, IComparable<GUIDTYPE>, IXmlSerializable
     {
-        private Guid _value;
+        private Guid? _value = null;
         private bool _isZero;
 
         /// <summary>
@@ -17,7 +17,7 @@ namespace QbSync.QbXml.Objects
         /// </summary>
         public GUIDTYPE()
         {
-            this._value = Guid.Empty;
+            //this._value = Guid.Empty;
         }
 
         /// <summary>
@@ -49,19 +49,22 @@ namespace QbSync.QbXml.Objects
         /// <returns>A GUID in the B format or "0".</returns>
         public override string ToString()
         {
+            if (_value == null) {
+                return "";
+            }
             if (_isZero && _value == Guid.Empty)
             {
                 return "0";
             }
 
-            return _value.ToString("B", CultureInfo.InvariantCulture);
+            return _value.Value.ToString("B", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
         /// Gets the GUID.
         /// </summary>
         /// <returns>GUID.</returns>
-        public Guid ToGuid()
+        public Guid? ToGuid()
         {
             return _value;
         }
@@ -137,7 +140,7 @@ namespace QbSync.QbXml.Objects
         /// Converts a GUIDTYPE to GUID automatically.
         /// </summary>
         /// <param name="value">A GUID.</param>
-        public static implicit operator Guid(GUIDTYPE? value)
+        public static implicit operator Guid?(GUIDTYPE? value)
         {
             if (value is null)
             {
@@ -183,7 +186,24 @@ namespace QbSync.QbXml.Objects
         /// <returns>True if equals.</returns>
         public int CompareTo(GUIDTYPE? other)
         {
-            return this._value.CompareTo(other?._value);
+            if (other == null) {
+                return 1;
+            }
+            //Compare nulls acording MSDN specification
+
+            //Two nulls are equal
+            if (!_value.HasValue && !other._value.HasValue)
+                return 0;
+
+            //Any object is greater than null
+            if (_value.HasValue && !other._value.HasValue)
+                return 1;
+
+            if (other._value.HasValue && !_value.HasValue)
+                return -1;
+
+            //Otherwise compare the two values
+            return (_value ?? default).CompareTo(other?._value ?? default);
         }
 
         /// <summary>
@@ -220,7 +240,9 @@ namespace QbSync.QbXml.Objects
         /// <param name="writer">XmlWriter.</param>
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteString(ToString());
+            if (_value != null) {
+                writer.WriteString(ToString());
+            }
         }
 
         private static Guid Parse(string value)

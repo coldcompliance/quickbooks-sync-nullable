@@ -10,7 +10,7 @@ namespace QbSync.QbXml.Objects
     /// </summary>
     public partial class DATETIMETYPE : ITypeWrapper, IComparable<DATETIMETYPE>, IXmlSerializable
     {
-        private DateTimeOffset _value;
+        private DateTimeOffset? _value = null;
         private bool _hasOffset;
         private bool _isLocal;
 
@@ -52,6 +52,29 @@ namespace QbSync.QbXml.Objects
 
             if (this < MinValue)
             {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "The supplied value is less than the minimum allowed date of 1970-01-01");
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DATETIMETYPE"/> class using the specified <see cref="DateTime"/>.
+        /// NOTE: The offset from UTC, if any, that will be sent to QuickBooks along with this date depends on the <see cref="DateTime.Kind"/> of the specified <paramref name="value"/>.
+        /// <see cref="DateTimeKind"/>.<see cref="DateTimeKind.Utc"/> will send "+00:00".
+        /// <see cref="DateTimeKind"/>.<see cref="DateTimeKind.Local"/> will send an offset as determined by the time zone of the machine this application is running on.
+        /// <see cref="DateTimeKind"/>.<see cref="DateTimeKind.Unspecified"/> will send no offset, which QuickBooks will interpret to mean the local time of the QuickBooks host computer.
+        /// </summary>
+        /// <seealso cref="DateTimeKind"/>
+        public DATETIMETYPE(DateTimeOffset value) {
+            
+            _value = value;
+            _hasOffset = true;
+            _isLocal = false;
+
+            if (this > MaxValue) {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "The supplied value is greater than the QuickBooks epoch of 2038-01-19T03:14:07+00:00");
+            }
+
+            if (this < MinValue) {
                 throw new ArgumentOutOfRangeException(nameof(value), value, "The supplied value is less than the minimum allowed date of 1970-01-01");
             }
         }
@@ -107,37 +130,37 @@ namespace QbSync.QbXml.Objects
         /// <summary>
         /// Gets the number of ticks for the date.
         /// </summary>
-        public long Ticks => _value.Ticks;
+        public long Ticks => _value?.Ticks ?? 0;
 
         /// <summary>
         /// Gets the year component of the date (1970-2038).
         /// </summary>
-        public int Year => _value.Year;
+        public int Year => _value?.Year ?? 0;
 
         /// <summary>
         /// Gets the month component of the date (1-12).
         /// </summary>
-        public int Month => _value.Month;
+        public int Month => _value?.Month ?? 0;
 
         /// <summary>
         /// Gets the day of month component of the date (1-31).
         /// </summary>
-        public int Day => _value.Day;
+        public int Day => _value?.Day ?? 0;
 
         /// <summary>
         /// Gets the hour component of the date (0-23).
         /// </summary>
-        public int Hour => _value.Hour;
+        public int Hour => _value?.Hour ?? 0;
 
         /// <summary>
         /// Gets the minute component of the date (0-59).
         /// </summary>
-        public int Minute => _value.Minute;
+        public int Minute => _value?.Minute ?? 0;
 
         /// <summary>
         /// Gets the second component of the date (0-59).
         /// </summary>
-        public int Second => _value.Second;
+        public int Second => _value?.Second ?? 0;
 
         /// <summary>
         /// Returns a local date formatted string "yyyy-MM-ddTHH:mm:ss" (no offset).
@@ -148,7 +171,7 @@ namespace QbSync.QbXml.Objects
             // The DateTime is otherwise accurate (follows DST), but the offset does not follow DST.
             // To accomodate for this, simply ignore the offset portion of the string, but only when parsing from XML.
 
-            return _value.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            return _value?.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture) ?? "";
         }
 
         /// <summary>
@@ -158,32 +181,46 @@ namespace QbSync.QbXml.Objects
         public string ToString(bool includeUncorrectedOffset)
         {
             return includeUncorrectedOffset && _hasOffset
-                ? _value.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture)
-                : _value.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                ? _value?.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture) ?? ""
+                : _value?.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture) ?? "";
         }
         
         /// <summary>
         /// Gets a <see cref="DateTime"/> value of this date. Will always have an <see cref="DateTimeKind.Unspecified"/> <see cref="DateTimeKind"/>
         /// for instances returned from QuickBooks. <see cref="DateTime.Kind"/> will match input value if constructed from a <see cref="DateTime"/>.
         /// </summary>
-        public DateTime ToDateTime()
+        public DateTime? ToDateTime()
         {
+            if (_value == null) {
+                return null;
+            }
+
             if (!_hasOffset)
             {
-                return _value.DateTime;
+                return _value?.DateTime;
             }
 
             if (_isLocal)
             {
-                return DateTime.SpecifyKind(_value.DateTime, DateTimeKind.Local);
+                return DateTime.SpecifyKind(_value.Value.DateTime, DateTimeKind.Local);
             }
 
-            if (_value.Offset == TimeSpan.Zero)
+            if (_value.Value.Offset == TimeSpan.Zero)
             {
-                return DateTime.SpecifyKind(_value.DateTime, DateTimeKind.Utc);
+                return DateTime.SpecifyKind(_value.Value.DateTime, DateTimeKind.Utc);
             }
 
-            return _value.DateTime;
+            return _value.Value.DateTime;
+        }
+
+        /// <summary>
+        /// Gets a <see cref="DateTimeOffset"/> value of this date.
+        /// </summary>
+        public DateTimeOffset? ToDateTimeOffset() {
+            if (_value == null) {
+                return null;
+            }
+            return _value;
         }
 
         /// <summary>
@@ -192,9 +229,12 @@ namespace QbSync.QbXml.Objects
         /// <param name="value">A positive or negative time interval</param>
         public DATETIMETYPE Add(TimeSpan value)
         {
+            if (_value == null) {
+                throw new InvalidOperationException("Value can not be null.");
+            }
             return new DATETIMETYPE
             {
-                _value = _value.Add(value),
+                _value = _value.Value.Add(value),
                 _hasOffset = _hasOffset,
                 _isLocal = _isLocal
             };
@@ -288,17 +328,27 @@ namespace QbSync.QbXml.Objects
         /// <returns>True if equals.</returns>
         public int CompareTo(DATETIMETYPE? other)
         {
-            if (other == null)
-            {
+            if (other == null) {
                 return 1;
             }
+            //Compare nulls acording MSDN specification
 
-            if (!_hasOffset || !other._hasOffset)
-            {
-                return _value.DateTime.CompareTo(other._value.DateTime);
+            //Two nulls are equal
+            if (!_value.HasValue && !other._value.HasValue)
+                return 0;
+
+            //Any object is greater than null
+            if (_value.HasValue && !other._value.HasValue)
+                return 1;
+
+            if (other._value.HasValue && !_value.HasValue)
+                return -1;
+
+            if (!_hasOffset || !other._hasOffset) {
+                return (_value ?? default).DateTime.CompareTo((other._value ?? default).DateTime);
             }
-
-            return _value.CompareTo(other._value);
+            //Otherwise compare the two values
+            return (_value ?? default).CompareTo(other?._value ?? default);
         }
 
         /// <summary>
@@ -343,7 +393,29 @@ namespace QbSync.QbXml.Objects
         /// <param name="writer">XmlWriter.</param>
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteString(ToString());
+            if (_value != null) {
+                writer.WriteString(ToString());
+            }
+        }
+
+        /// <summary>
+        /// Converts a DateTime to DATETYPE automatically.
+        /// </summary>
+        /// <param name="value">A DATETYPE.</param>
+        public static implicit operator DATETIMETYPE(DateTimeOffset value) {
+            return new DATETIMETYPE(value);
+        }
+
+        /// <summary>
+        /// Converts a DATETYPE to DateTime automatically.
+        /// </summary>
+        /// <param name="value">A DateTime.</param>
+        public static implicit operator DateTimeOffset?(DATETIMETYPE? value) {
+            if (value != null) {
+                return value.ToDateTimeOffset();
+            }
+
+            return default;
         }
 
         private static DateTimeOffset ParseValue(string value, out bool hasOffset)

@@ -33,9 +33,12 @@ namespace QbSync.XsdGenerator
             }
 
             var output = string.Empty;
-            if (args[i].StartsWith("/o:"))
-            {
+            if (args[i].StartsWith("/o:")) {
                 output = args[i].Substring(3);
+            } else {
+                var date = DateTime.UtcNow.ToString("yyyy-MM-dd HH-mm-ss");
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                output = $"{path}\\xsdoutput\\classes {date}.c";
             }
 
             xsds.Compile(null, true);

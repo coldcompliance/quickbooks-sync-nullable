@@ -4,27 +4,22 @@ using QbSync.QbXml.Tests.Helpers;
 using System.Linq;
 using System.Xml;
 
-namespace QbSync.QbXml.Tests.QbXml
-{
+namespace QbSync.QbXml.Tests.QbXml {
     [TestFixture]
-    class InvoiceModRequestTests
-    {
+    class InvoiceModRequestTests {
         [Test]
-        public void BasicInvoiceModRequestTest()
-        {
+        public void BasicInvoiceModRequestTest() {
             var request = new QbXmlRequest();
-            var innerRequest = new InvoiceModRqType
-            {
-                InvoiceMod = new InvoiceMod
-                {
+            var innerRequest = new InvoiceModRqType {
+                InvoiceMod = new InvoiceMod {
                     TxnID = "123",
                     EditSequence = "456",
-                    CustomerRef = new CustomerRef
-                    {
+                    CustomerRef = new CustomerRef {
                         ListID = "12345"
                     },
-                    IsPending = true,
+                    IsPending = new BOOLTYPE(),
                     InvoiceLineMod = new InvoiceLineMod[]
+
                     {
                         new InvoiceLineMod
                         {
@@ -36,7 +31,8 @@ namespace QbSync.QbXml.Tests.QbXml
                             TxnLineID = "5678",
                             Desc = "Desc2"
                         }
-                    }
+                    },
+                    ShipDate = new DATETYPE()
                 }
             };
             request.AddToSingle(innerRequest);
@@ -52,6 +48,7 @@ namespace QbSync.QbXml.Tests.QbXml
             Assert.AreEqual(innerRequest.InvoiceMod.EditSequence, node.ReadNode("EditSequence"));
             Assert.AreEqual(innerRequest.InvoiceMod.CustomerRef.ListID, node.ReadNode("CustomerRef/ListID"));
             Assert.AreEqual(innerRequest.InvoiceMod.IsPending.ToString(), node.ReadNode("IsPending"));
+            Assert.AreEqual(innerRequest.InvoiceMod.ShipDate.ToString(), node.ReadNode("ShipDate"));
 
             var nodes2 = node.SelectNodes("InvoiceLineMod");
             Assert.AreEqual(innerRequest.InvoiceMod.InvoiceLineMod.Count(), nodes2.Count);

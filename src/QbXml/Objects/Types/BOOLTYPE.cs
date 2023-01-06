@@ -13,8 +13,9 @@ namespace QbSync.QbXml.Objects
         /// <summary>
         /// The inner value.
         /// </summary>
-        protected bool _value;
-
+        protected bool? _value = null;
+        //protected bool _hasValue;
+        
         /// <summary>
         /// Creates a BOOLTYPE class.
         /// </summary>
@@ -46,14 +47,22 @@ namespace QbSync.QbXml.Objects
         /// <returns>true or false as a string.</returns>
         public override string ToString()
         {
-            return _value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
+            if (_value == null) {
+                return "";
+            }
+            if (_value.Value == true) {
+                return "1";
+            } else {
+                return "0";
+            }
+            //return _value?.ToString(CultureInfo.InvariantCulture).ToLowerInvariant() ?? "";
         }
 
         /// <summary>
         /// Gets the boolean.
         /// </summary>
         /// <returns>Boolean.</returns>
-        public bool ToBoolean()
+        public bool? ToBoolean()
         {
             return _value;
         }
@@ -129,8 +138,9 @@ namespace QbSync.QbXml.Objects
         /// Converts a BOOLTYPE to boolean automatically.
         /// </summary>
         /// <param name="value">A boolean.</param>
-        public static implicit operator bool(BOOLTYPE? value)
+        public static implicit operator bool?(BOOLTYPE? value)
         {
+            
             if (value is null)
             {
                 return default;
@@ -146,7 +156,24 @@ namespace QbSync.QbXml.Objects
         /// <returns>True if equals.</returns>
         public int CompareTo(BOOLTYPE? other)
         {
-            return _value.CompareTo(other?._value);
+            if (other == null) {
+                return 1;
+            }
+            //Compare nulls acording MSDN specification
+
+            //Two nulls are equal
+            if (!_value.HasValue && !other._value.HasValue)
+                return 0;
+
+            //Any object is greater than null
+            if (_value.HasValue && !other._value.HasValue)
+                return 1;
+
+            if (other._value.HasValue && !_value.HasValue)
+                return -1;
+
+            //Otherwise compare the two values
+            return (_value ?? false).CompareTo(other?._value);
         }
 
         /// <summary>
@@ -180,7 +207,9 @@ namespace QbSync.QbXml.Objects
         /// <param name="writer">XmlWriter.</param>
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteString(ToString());
+            if (_value != null) {
+                writer.WriteString(ToString());
+            }
         }
 
         private static bool Parse(string value)

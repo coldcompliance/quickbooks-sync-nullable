@@ -12,7 +12,7 @@ namespace QbSync.QbXml.Objects
         /// <summary>
         /// The internal value.
         /// </summary>
-        protected decimal _value;
+        protected decimal? _value;
 
         /// <summary>
         /// Creates a FLOATTYPE class.
@@ -45,14 +45,14 @@ namespace QbSync.QbXml.Objects
         /// <returns>Decimal in 10.5 format.</returns>
         public override string ToString()
         {
-            return _value.ToString("0.#####", CultureInfo.InvariantCulture);
+            return _value?.ToString("0.#####", CultureInfo.InvariantCulture) ?? "";
         }
 
         /// <summary>
         /// Gets the decimal.
         /// </summary>
         /// <returns>decimal.</returns>
-        public decimal ToDecimal()
+        public decimal? ToDecimal()
         {
             return _value;
         }
@@ -128,7 +128,7 @@ namespace QbSync.QbXml.Objects
         /// Converts a FLOATTYPE to decimal automatically.
         /// </summary>
         /// <param name="value">A decimal.</param>
-        public static implicit operator decimal(FLOATTYPE? value)
+        public static implicit operator decimal?(FLOATTYPE? value)
         {
             if (value != null)
             {
@@ -145,7 +145,24 @@ namespace QbSync.QbXml.Objects
         /// <returns>True if equals.</returns>
         public int CompareTo(FLOATTYPE? other)
         {
-            return this._value.CompareTo(other?._value);
+            if (other == null) {
+                return 1;
+            }
+            //Compare nulls acording MSDN specification
+
+            //Two nulls are equal
+            if (!_value.HasValue && !other._value.HasValue)
+                return 0;
+
+            //Any object is greater than null
+            if (_value.HasValue && !other._value.HasValue)
+                return 1;
+
+            if (other._value.HasValue && !_value.HasValue)
+                return -1;
+
+            //Otherwise compare the two values
+            return (_value ?? default).CompareTo(other?._value ?? default);
         }
 
         /// <summary>
@@ -179,7 +196,9 @@ namespace QbSync.QbXml.Objects
         /// <param name="writer">XmlWriter.</param>
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteString(ToString());
+            if (_value != null) {
+                writer.WriteString(ToString());
+            }
         }
 
         private static decimal Parse(string value)

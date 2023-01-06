@@ -49,7 +49,7 @@ namespace QbSync.QbXml.Tests.Types
             Assert.AreEqual(str, DATETIMETYPE.Parse(date.ToString()).ToString());
 
             // DATETIMETYPE > DateTime > DATETIMETYPE > string
-            Assert.AreEqual(str, new DATETIMETYPE(date.ToDateTime()).ToString());
+            Assert.AreEqual(str, new DATETIMETYPE(date.ToDateTime().Value).ToString());
 
             // DATETIMETYPE > DateTime > string > DATETIMETYPE > string
             Assert.AreEqual(str, DATETIMETYPE.Parse(date.ToDateTime().ToString()).ToString());
@@ -58,7 +58,7 @@ namespace QbSync.QbXml.Tests.Types
             Assert.AreEqual(str, new DATETIMETYPE(DateTime.Parse(date.ToDateTime().ToString())).ToString());
 
             // DATETIMETYPE > DateTime > Ticks > DateTime > DATETIMETYPE > string
-            Assert.AreEqual(str, new DATETIMETYPE(new DateTime(date.ToDateTime().Ticks)).ToString());
+            Assert.AreEqual(str, new DATETIMETYPE(new DateTime(date.ToDateTime().Value.Ticks)).ToString());
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace QbSync.QbXml.Tests.Types
             // *********************************************************************************
 
             // DATETIMETYPE > DateTime > DATETIMETYPE > string
-            Assert.AreEqual("2019-02-20T10:36:51", new DATETIMETYPE(date.ToDateTime()).ToString());
+            Assert.AreEqual("2019-02-20T10:36:51", new DATETIMETYPE(date.ToDateTime().Value).ToString());
 
             // DATETIMETYPE > DateTime > string > DATETIMETYPE > string
             Assert.AreEqual("2019-02-20T10:36:51", DATETIMETYPE.Parse(date.ToDateTime().ToString()).ToString());
@@ -278,7 +278,7 @@ namespace QbSync.QbXml.Tests.Types
         [Test, TestCaseSource(nameof(ToDateTimeIsUtcForZeroOffsetsInput))]
         public void ToDateTimeIsUtcForZeroOffsets(DATETIMETYPE input)
         {
-            Assert.AreEqual(DateTimeKind.Utc, input.ToDateTime().Kind);
+            Assert.AreEqual(DateTimeKind.Utc, input.ToDateTime().Value.Kind);
         }
 
 
@@ -296,7 +296,7 @@ namespace QbSync.QbXml.Tests.Types
         [Test, TestCaseSource(nameof(ToDateTimeIsUnspecifiedForNonZeroAndEmptyOffsetsInputs))]
         public void ToDateTimeIsUnspecifiedForNonZeroAndEmptyOffsets(DATETIMETYPE input)
         {
-            Assert.AreEqual(DateTimeKind.Unspecified, input.ToDateTime().Kind);
+            Assert.AreEqual(DateTimeKind.Unspecified, input.ToDateTime().Value.Kind);
         }
 
         [Test]
@@ -306,7 +306,7 @@ namespace QbSync.QbXml.Tests.Types
             // No QuickBooks parsed DATETIMETYPE will ever have a Local kind
 
             var dt = new DATETIMETYPE(new DateTime(2019, 1, 1, 8, 0, 0, 0, DateTimeKind.Local));
-            Assert.AreEqual(DateTimeKind.Local, dt.ToDateTime().Kind);
+            Assert.AreEqual(DateTimeKind.Local, dt.ToDateTime().Value.Kind);
         }
 
         [Test]
@@ -523,7 +523,7 @@ namespace QbSync.QbXml.Tests.Types
 
             var customer = CreateAndParseCustomerQueryXml(time, time);
 
-            Assert.AreEqual(DateTimeKind.Unspecified, customer.TimeModified.ToDateTime().Kind);
+            Assert.AreEqual(DateTimeKind.Unspecified, customer.TimeModified.ToDateTime().Value.Kind);
         }
 
         [Test]

@@ -48,7 +48,7 @@ namespace QbSync.QbXml.Objects
         /// <returns>Decimal in F2 format.</returns>
         public override string ToString()
         {
-            return _value.ToString("F2", CultureInfo.InvariantCulture);
+            return _value?.ToString("F2", CultureInfo.InvariantCulture) ?? "";
         }
     }
 }

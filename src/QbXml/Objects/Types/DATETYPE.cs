@@ -9,7 +9,7 @@ namespace QbSync.QbXml.Objects
     /// </summary>
     public partial class DATETYPE : ITypeWrapper, IComparable<DATETYPE>, IXmlSerializable
     {
-        private DateTime _value;
+        private DateTime? _value = null;
 
         /// <summary>
         /// Creates a DATETYPE class.
@@ -44,22 +44,22 @@ namespace QbSync.QbXml.Objects
         /// <summary>
         /// Gets the number of ticks for the date.
         /// </summary>
-        public long Ticks => _value.Ticks;
+        public long Ticks => _value?.Ticks ?? 0;
 
         /// <summary>
         /// Gets the year component of the date (1970-2038).
         /// </summary>
-        public int Year => _value.Year;
+        public int Year => _value?.Year ?? 0;
 
         /// <summary>
         /// Gets the month component of the date (1-12).
         /// </summary>
-        public int Month => _value.Month;
+        public int Month => _value?.Month ?? 0;
 
         /// <summary>
         /// Gets the day of month component of the date (1-31).
         /// </summary>
-        public int Day => _value.Day;
+        public int Day => _value?.Day ?? 0;
 
         /// <summary>
         /// A string representation of the date.
@@ -67,14 +67,17 @@ namespace QbSync.QbXml.Objects
         /// <returns>Date in yyyy-MM-dd format.</returns>
         public override string ToString()
         {
-            return _value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            if (_value == null) {
+                return "";
+            }
+            return _value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
         /// Gets the DateTime.
         /// </summary>
         /// <returns>DateTime.</returns>
-        public DateTime ToDateTime()
+        public DateTime? ToDateTime()
         {
             return _value;
         }
@@ -150,7 +153,7 @@ namespace QbSync.QbXml.Objects
         /// Converts a DATETYPE to DateTime automatically.
         /// </summary>
         /// <param name="value">A DateTime.</param>
-        public static implicit operator DateTime(DATETYPE? value)
+        public static implicit operator DateTime?(DATETYPE? value)
         {
             if (value != null)
             {
@@ -167,7 +170,24 @@ namespace QbSync.QbXml.Objects
         /// <returns>True if equals.</returns>
         public int CompareTo(DATETYPE? other)
         {
-            return this._value.CompareTo(other?._value);
+            if (other == null) {
+                return 1;
+            }
+            //Compare nulls acording MSDN specification
+
+            //Two nulls are equal
+            if (!_value.HasValue && !other._value.HasValue)
+                return 0;
+
+            //Any object is greater than null
+            if (_value.HasValue && !other._value.HasValue)
+                return 1;
+
+            if (other._value.HasValue && !_value.HasValue)
+                return -1;
+
+            //Otherwise compare the two values
+            return (_value ?? default).CompareTo(other?._value ?? default);
         }
 
         /// <summary>
